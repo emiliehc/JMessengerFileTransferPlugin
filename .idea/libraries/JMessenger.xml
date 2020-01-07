@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="JMessenger">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../JMessenger/out/artifacts/Client_JAR/JMessenger.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$PROJECT_DIR$/../JMessenger/out/artifacts/Client_JAR/JMessenger.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../JMessenger/out/artifacts/Client_JAR/JMessenger.jar!/" />
+    </SOURCES>
+  </library>
+</component>
