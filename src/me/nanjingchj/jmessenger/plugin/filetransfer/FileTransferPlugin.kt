@@ -7,8 +7,11 @@ import jmessenger.shared.Message
 import jmessenger.shared.PluginMessage
 import org.apache.commons.lang3.SerializationUtils
 import java.io.File
+import java.nio.file.Files
 import javax.swing.JFileChooser
 import javax.swing.JLabel
+import java.io.FileOutputStream
+import javax.swing.JOptionPane
 
 
 class FileTransferPlugin : AbstractPlugin() {
@@ -29,7 +32,7 @@ class FileTransferPlugin : AbstractPlugin() {
                 // saved to the client computer. This is important because if the user has already saved the file to
                 // their computer, the program would then clear the file so that it no longer exists in memory, which
                 // lowers the memory footprint of the program if the user transfers file very frequently.
-                val f = MFile(selectedFile)
+                val f = MFile(Files.readAllBytes(selectedFile.toPath()))
                 // serialize the file and wrap it around inside a plugin message object
                 val data = SerializationUtils.serialize(f)
                 val msg = PluginMessage(it.conversation.recipient, data, "FILE")
@@ -54,12 +57,23 @@ class FileTransferPlugin : AbstractPlugin() {
                 mFile.isDownloaded = true
                 // write the data back to the PluginMessage
                 pm.data = SerializationUtils.serialize(mFile)
-            } else {
-                // download the file
-                TODO()
+            } else if (!mFile.isDownloaded) {
+                // download the file and prompt the user where to save it
+                JOptionPane.showMessageDialog(null, "New file received. Click ok to save it locally.", "File", JOptionPane.INFORMATION_MESSAGE)
+                val file = mFile.file
+                val fileChooser = JFileChooser()
+                fileChooser.currentDirectory = File(System.getProperty("user.home"))
+                val result = fileChooser.showOpenDialog(null)
+                if (result == JFileChooser.APPROVE_OPTION) {
+                    val selectedFile = fileChooser.selectedFile
+                    FileOutputStream("pathname").use { fos ->
+                        fos.write(mFile.file) // TODO RESOLVE THIS ISSUE
+                    }
+                }
+                mFile.isDownloaded = true
             }
             // render as [File]
-            TODO()
+            return JLabel("[File]")
         }
         // if not a file
         return null
