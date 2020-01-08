@@ -6,11 +6,15 @@ import jmessenger.client.PluginButton
 import jmessenger.shared.Message
 import jmessenger.shared.PluginMessage
 import org.apache.commons.lang3.SerializationUtils
+import java.io.ByteArrayInputStream
 import java.io.File
+import java.io.FileOutputStream
+import java.io.ObjectInputStream
+import java.lang.Exception
 import java.nio.file.Files
+import java.util.*
 import javax.swing.JFileChooser
 import javax.swing.JLabel
-import java.io.FileOutputStream
 import javax.swing.JOptionPane
 
 
@@ -47,35 +51,64 @@ class FileTransferPlugin : AbstractPlugin() {
     }
 
     override fun renderCustomMessage(pm: PluginMessage): JLabel? {
+        // TODO render as [file], download only when the label is pressed
+        println(pm.type)
+        println(pm.isMyMessage)
         if (pm.type == "FILE") {
+            println("rendering file")
             // deserialize then render
-            val mFile = SerializationUtils.deserialize<MFile>(pm.data)
-            // if the message is my own message, i won't have to downloaded. therefore, delete the file and mark it
+            val data = pm.data
+            println(Arrays.toString(data))
+            println("data taken out")
+            //val mFile = SerializationUtils.deserialize<MFile>(ByteArray(10))
+            //val mFile = MFile(data)
+            //val mFile = SerializationUtils.deserialize<MFile>(data)
+            val mFile: MFile?
+            try {
+                val bais = ByteArrayInputStream(data)
+                val ois = ObjectInputStream(bais)
+                mFile = ois.readObject() as MFile
+            } catch (e: Exception) {
+                e.printStackTrace()
+                return null
+            }
+
+            println("file deserialized")
+            // if the message is my own message, i won't have to download it. therefore, delete the file and mark it
             // as downloaded.
             if (pm.isMyMessage) {
+                println("is my message")
                 mFile.file = null
                 mFile.isDownloaded = true
                 // write the data back to the PluginMessage
                 pm.data = SerializationUtils.serialize(mFile)
-            } else if (!mFile.isDownloaded) {
+            } else {
+                println("downloading file")
                 // download the file and prompt the user where to save it
-                JOptionPane.showMessageDialog(null, "New file received. Click ok to save it locally.", "File", JOptionPane.INFORMATION_MESSAGE)
-                val file = mFile.file
+                JOptionPane.showMessageDialog(
+                    null,
+                    "New file received. Click ok to save it locally.",
+                    "File",
+                    JOptionPane.INFORMATION_MESSAGE
+                )
                 val fileChooser = JFileChooser()
                 fileChooser.currentDirectory = File(System.getProperty("user.home"))
                 val result = fileChooser.showOpenDialog(null)
                 if (result == JFileChooser.APPROVE_OPTION) {
                     val selectedFile = fileChooser.selectedFile
-                    FileOutputStream("pathname").use { fos ->
-                        fos.write(mFile.file) // TODO RESOLVE THIS ISSUE
+                    FileOutputStream(selectedFile).use { fos ->
+                        fos.write(mFile.file as ByteArray)
                     }
                 }
                 mFile.isDownloaded = true
+                pm.isMyMessage = true // prevent further downloads
             }
             // render as [File]
+            println("returned")
             return JLabel("[File]")
         }
         // if not a file
+        println("returned null")
         return null
     }
 }
