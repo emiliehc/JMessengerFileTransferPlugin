@@ -6,6 +6,7 @@ import jmessenger.client.PluginButton
 import jmessenger.shared.Message
 import jmessenger.shared.PluginMessage
 import org.apache.commons.lang3.SerializationUtils
+import java.awt.Font
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import java.awt.event.MouseListener
@@ -49,14 +50,14 @@ class FileTransferPlugin : AbstractPlugin() {
     override fun renderCustomMessage(pm: PluginMessage): JLabel? {
         if (pm.type == "FILE") {
             val data = pm.data
-            val lbl = JLabel("[File]")
+            val lbl = JLabel(if (pm.isMyMessage) "[File]" else "[Click here to download file]")
             lbl.addMouseListener(object : MouseAdapter() {
                 override fun mouseClicked(e: MouseEvent) {
-                    println("clicked" + pm.isMyMessage)
                     // download only if it is sent by the other person
                     if (!pm.isMyMessage) {
                         saveFile(data)
                         pm.isMyMessage = true // prevent further downloads
+                        lbl.text = "[File]"
                     }
                 }
             })
